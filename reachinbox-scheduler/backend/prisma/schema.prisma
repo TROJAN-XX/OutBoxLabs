@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  googleId  String   @unique
+  name      String
+  email     String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schedules EmailSchedule[]
+  emailJobs EmailJob[]
+  senders   Sender[]
+
+  @@index([googleId])
+  @@index([email])
+}
+
+model EmailSchedule {
+  id                 String   @id @default(uuid())
+  userId             String
+  subject            String
+  body               String
+  startTime          DateTime
+  delayBetweenEmails Int      @default(2000) // milliseconds
+  hourlyLimit        Int      @default(100)
+  recipientCount     Int      @default(0)
+  createdAt          DateTime @default(now())
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailJobs EmailJob[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model EmailJob {
+  id          String        @id @default(uuid())
+  scheduleId  String
+  userId      String
+  senderId    String?
+  recipient   String
+  subject     String
+  body        String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      EmailJobStatus @default(SCHEDULED)
+  attempts    Int           @default(0)
+  bullJobId   String?       @unique
+  lastError   String?
+  previewUrl  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  schedule EmailSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender   Sender?       @relation(fields: [senderId], references: [id])
+
+  @@index([userId])
+  @@index([scheduleId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([senderId])
+  @@index([bullJobId])
+  @@index([userId, status])
+  @@index([senderId, scheduledAt])
+}
+
+model Sender {
+  id              String   @id @default(uuid())
+  userId          String
+  email           String
+  etherealUser    String
+  etherealPassword String
+  createdAt       DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailJobs EmailJob[]
+
+  @@unique([userId, email])
+  @@index([userId])
+}
+
+enum EmailJobStatus {
+  SCHEDULED
+  PROCESSING
+  SENT
+  FAILED
+}
