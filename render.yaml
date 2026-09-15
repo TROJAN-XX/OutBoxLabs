@@ -55,7 +55,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://reachinbox-backend.onrender.com/api
+        value: https://reachinbox-backend-0m3g.onrender.com/api
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false
 
