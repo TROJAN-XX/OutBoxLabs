@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '../types/auth';
-import { loginWithGoogle, getCurrentUser, logoutUser } from '../services/auth';
+import { loginWithGoogle, loginDemo, getCurrentUser, logoutUser } from '../services/auth';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
   login: (credential: string) => Promise<void>;
+  loginWithDemo: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -44,6 +45,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loginWithDemo = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await loginDemo();
+      localStorage.setItem('auth_token', result.token);
+      setUser(result.user);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await logoutUser();
@@ -62,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         authenticated: !!user,
         login,
+        loginWithDemo,
         logout,
       }}
     >

@@ -11,6 +11,11 @@ export async function loginWithGoogle(credential: string): Promise<AuthResponse>
   return data.data;
 }
 
+export async function loginDemo(): Promise<AuthResponse> {
+  const { data } = await api.post('/auth/demo');
+  return data.data;
+}
+
 export async function getCurrentUser(): Promise<User> {
   const { data } = await api.get('/auth/me');
   return data.data;

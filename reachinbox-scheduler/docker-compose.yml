@@ -6,9 +6,9 @@ services:
     container_name: reachinbox-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: reachinbox
-      POSTGRES_PASSWORD: reachinbox_secret
-      POSTGRES_DB: reachinbox_db
+      POSTGRES_USER: ${POSTGRES_USER:-reachinbox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reachinbox_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-reachinbox_db}
     ports:
       - '5432:5432'
     volumes:
@@ -33,6 +33,53 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reachinbox-backend
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-reachinbox}:${POSTGRES_PASSWORD:-reachinbox_secret}@postgres:5432/${POSTGRES_DB:-reachinbox_db}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-reachinbox-super-secret-key-change-in-prod}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ETHEREAL_HOST: ${ETHEREAL_HOST:-smtp.ethereal.email}
+      ETHEREAL_PORT: ${ETHEREAL_PORT:-587}
+      ETHEREAL_USER: ${ETHEREAL_USER:-}
+      ETHEREAL_PASSWORD: ${ETHEREAL_PASSWORD:-}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
+      MAX_EMAILS_PER_HOUR: ${MAX_EMAILS_PER_HOUR:-100}
+      MIN_EMAIL_DELAY_MS: ${MIN_EMAIL_DELAY_MS:-2000}
+      EMAIL_RETRY_ATTEMPTS: ${EMAIL_RETRY_ATTEMPTS:-3}
+      EMAIL_RETRY_BACKOFF_MS: ${EMAIL_RETRY_BACKOFF_MS:-5000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: reachinbox-frontend
+    restart: unless-stopped
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

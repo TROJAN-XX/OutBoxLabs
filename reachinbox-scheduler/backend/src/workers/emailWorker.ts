@@ -4,7 +4,7 @@ import { createRedisConnection } from '../config/redis';
 import { env } from '../config/env';
 import { prisma } from '../config/database';
 import { EMAIL_QUEUE_NAME, EmailJobPayload, rescheduleEmailJob } from '../queues/emailQueue';
-import { sendEmail, buildSenderCredentials, buildDefaultCredentials } from '../services/smtpService';
+import { sendEmail, buildSenderCredentials, resolveDefaultCredentials } from '../services/smtpService';
 import {
   tryAcquireRateSlot,
   getNextHourWindowStart,
@@ -145,13 +145,13 @@ async function processEmailJob(job: Job<EmailJobPayload>): Promise<void> {
     let credentials;
     if (senderId) {
       const sender = await prisma.sender.findUnique({ where: { id: senderId } });
-      if (sender) {
+      if (sender && sender.etherealUser && sender.etherealPassword) {
         credentials = buildSenderCredentials(sender);
       } else {
-        credentials = buildDefaultCredentials();
+        credentials = await resolveDefaultCredentials();
       }
     } else {
-      credentials = buildDefaultCredentials();
+      credentials = await resolveDefaultCredentials();
     }
 
     const senderEmail = credentials.user || 'noreply@reachinbox.dev';

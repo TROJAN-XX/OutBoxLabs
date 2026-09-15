@@ -82,6 +82,36 @@ export async function sendEmail(params: SendEmailParams): Promise<SendResult> {
   }
 }
 
+let autoTestAccount: nodemailer.TestAccount | null = null;
+
+export async function getOrCreateTestAccount(): Promise<nodemailer.TestAccount> {
+  if (!autoTestAccount) {
+    logger.info('[SMTP] No Ethereal credentials provided in .env, automatically generating Ethereal test account...');
+    autoTestAccount = await nodemailer.createTestAccount();
+    logger.info(`[SMTP] Auto-generated Ethereal test account: user=${autoTestAccount.user}`);
+  }
+  return autoTestAccount;
+}
+
+export async function resolveDefaultCredentials(): Promise<SmtpCredentials> {
+  if (env.ETHEREAL_USER && env.ETHEREAL_PASSWORD) {
+    return {
+      host: env.ETHEREAL_HOST,
+      port: env.ETHEREAL_PORT,
+      user: env.ETHEREAL_USER,
+      password: env.ETHEREAL_PASSWORD,
+    };
+  }
+
+  const testAccount = await getOrCreateTestAccount();
+  return {
+    host: 'smtp.ethereal.email',
+    port: 587,
+    user: testAccount.user,
+    password: testAccount.pass,
+  };
+}
+
 export function buildDefaultCredentials(): SmtpCredentials {
   return {
     host: env.ETHEREAL_HOST,

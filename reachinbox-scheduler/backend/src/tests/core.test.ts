@@ -245,7 +245,8 @@ describe('CSV Email Extraction', () => {
     const normalized = allEmails.map((e) => e.trim().toLowerCase());
     const unique = [...new Set(normalized)];
     const duplicates = normalized.length - unique.length;
-    const valid = unique.filter((e) => emailRegex.test(e));
+    const validationRegex = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+    const valid = unique.filter((e) => validationRegex.test(e));
 
     return { valid, invalid, duplicates };
   }

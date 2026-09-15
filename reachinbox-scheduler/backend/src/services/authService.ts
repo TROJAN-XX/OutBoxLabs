@@ -41,7 +41,7 @@ async function verifyGoogleToken(credential: string): Promise<GoogleUserInfo> {
 
 function generateJwt(userId: string, email: string): string {
   return jwt.sign({ userId, email }, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.JWT_EXPIRES_IN as any,
   });
 }
 
@@ -115,4 +115,57 @@ export async function getCurrentUser(userId: string) {
   }
 
   return user;
+}
+
+export async function authenticateDemoUser() {
+  const demoEmail = 'demo@reachinbox.ai';
+  const demoGoogleId = 'demo-google-id-reachinbox-001';
+
+  const user = await prisma.user.upsert({
+    where: { googleId: demoGoogleId },
+    update: {
+      name: 'Demo User',
+      email: demoEmail,
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ReachInboxDemo',
+    },
+    create: {
+      googleId: demoGoogleId,
+      name: 'Demo User',
+      email: demoEmail,
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ReachInboxDemo',
+    },
+  });
+
+  logger.info(`[AUTH] Demo user authenticated: ${user.email}`);
+
+  const token = generateJwt(user.id, user.email);
+
+  // Auto-create a default sender from Ethereal credentials if configured and user has no senders
+  if (env.ETHEREAL_USER && env.ETHEREAL_PASSWORD) {
+    const existingSender = await prisma.sender.findFirst({
+      where: { userId: user.id },
+    });
+
+    if (!existingSender) {
+      await prisma.sender.create({
+        data: {
+          userId: user.id,
+          email: env.ETHEREAL_USER,
+          etherealUser: env.ETHEREAL_USER,
+          etherealPassword: env.ETHEREAL_PASSWORD,
+        },
+      });
+      logger.info(`[AUTH] Default Ethereal sender created for demo user ${user.email}`);
+    }
+  }
+
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+    },
+    token,
+  };
 }

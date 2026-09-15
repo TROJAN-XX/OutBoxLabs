@@ -82,7 +82,7 @@ export async function getEmail(
   next: NextFunction
 ): Promise<void> {
   try {
-    const job = await getEmailById(req.userId!, req.params.id);
+    const job = await getEmailById(req.userId!, req.params.id as string);
     res.json({ success: true, data: job });
   } catch (error) {
     next(error);
@@ -95,7 +95,7 @@ export async function cancelEmail(
   next: NextFunction
 ): Promise<void> {
   try {
-    const job = await cancelEmailJob(req.userId!, req.params.id);
+    const job = await cancelEmailJob(req.userId!, req.params.id as string);
     res.json({
       success: true,
       data: job,
