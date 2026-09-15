@@ -40,8 +40,8 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 
-// Health endpoint
-app.get('/api/health', async (_req, res) => {
+// Health handler
+const handleHealth = async (_req: any, res: any) => {
   let dbStatus = 'error';
   let redisStatus = 'error';
 
@@ -70,11 +70,19 @@ app.get('/api/health', async (_req, res) => {
       timestamp: new Date().toISOString(),
     },
   });
-});
+};
 
-// API Routes
+app.get('/api/health', handleHealth);
+app.get('/health', handleHealth);
+
+// API Routes — support /api, /, and /api/api paths
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/api/auth', authRoutes);
+
 app.use('/api/emails', emailRoutes);
+app.use('/emails', emailRoutes);
+app.use('/api/api/emails', emailRoutes);
 
 // 404 handler
 app.use((_req, res) => {
