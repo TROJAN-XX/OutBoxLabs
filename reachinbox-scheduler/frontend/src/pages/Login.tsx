@@ -34,6 +34,7 @@ export function Login() {
   const navigate = useNavigate();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [loginLoading, setLoginLoading] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   // Redirect if already authenticated
@@ -45,11 +46,18 @@ export function Login() {
 
   const handleDemoLogin = async () => {
     setLoginLoading(true);
+    setErrorMsg(null);
     try {
       await loginWithDemo();
       navigate('/dashboard', { replace: true });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Demo login failed:', err);
+      const message =
+        err.response?.data?.message ||
+        (err.code === 'ECONNABORTED'
+          ? 'Connection timed out. The backend server might still be waking up on Render. Please retry in a few seconds.'
+          : err.message || 'Failed to connect to backend server. Please check your backend service on Render.');
+      setErrorMsg(message);
     } finally {
       setLoginLoading(false);
     }
@@ -129,6 +137,13 @@ export function Login() {
 
           {/* Divider */}
           <div className="border-t border-border my-6" />
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 leading-relaxed text-center">
+              {errorMsg}
+            </div>
+          )}
 
           {/* Google Sign-In & Demo Sign-In */}
           <div className="flex flex-col items-center gap-4 w-full">
