@@ -27,7 +27,7 @@ export const env = {
   REDIS_URL: optionalEnv('REDIS_URL', 'redis://localhost:6379'),
 
   // Google OAuth
-  GOOGLE_CLIENT_ID: requireEnv('GOOGLE_CLIENT_ID'),
+  GOOGLE_CLIENT_ID: optionalEnv('GOOGLE_CLIENT_ID', ''),
   GOOGLE_CLIENT_SECRET: optionalEnv('GOOGLE_CLIENT_SECRET', ''),
 
   // JWT

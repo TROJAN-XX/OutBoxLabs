@@ -18,7 +18,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: reachinbox-redis
           property: connectionString
       - key: JWT_SECRET
@@ -26,7 +26,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        sync: false
+        value: https://reachinbox-frontend.onrender.com
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -60,12 +60,15 @@ services:
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false
 
+  # Redis / Key-Value Instance
+  - type: keyvalue
+    name: reachinbox-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
 databases:
   - name: reachinbox-postgres
     plan: free
     databaseName: reachinbox_db
     user: reachinbox
-
-  - name: reachinbox-redis
-    plan: free
-    maxmemoryPolicy: noeviction
