@@ -4,11 +4,19 @@ import { logger } from '../utils/logger';
 
 let redisConnection: Redis | null = null;
 
+function getBaseRedisOptions() {
+  const isTls = env.REDIS_URL.startsWith('rediss://');
+  return {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
+  };
+}
+
 export function getRedisConnection(): Redis {
   if (!redisConnection) {
     redisConnection = new Redis(env.REDIS_URL, {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: true,
+      ...getBaseRedisOptions(),
       retryStrategy: (times: number) => {
         if (times > 10) {
           logger.error('[REDIS] Max reconnection attempts reached');
@@ -37,10 +45,7 @@ export function getRedisConnection(): Redis {
 }
 
 export function createRedisConnection(): Redis {
-  return new Redis(env.REDIS_URL, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: true,
-  });
+  return new Redis(env.REDIS_URL, getBaseRedisOptions());
 }
 
 export async function disconnectRedis(): Promise<void> {

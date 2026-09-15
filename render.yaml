@@ -5,7 +5,7 @@ services:
     runtime: node
     rootDir: reachinbox-scheduler/backend
     plan: free
-    buildCommand: npm ci && npx prisma generate && npm run build
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm start
     envVars:
       - key: NODE_ENV
