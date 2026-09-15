@@ -2,7 +2,7 @@ services:
   # Backend API + Worker
   - type: web
     name: reachinbox-backend
-    env: node
+    runtime: node
     rootDir: backend
     plan: free
     buildCommand: npm ci && npx prisma generate && npm run build
@@ -45,9 +45,8 @@ services:
   # Frontend Static Site
   - type: web
     name: reachinbox-frontend
-    env: static
+    runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:
